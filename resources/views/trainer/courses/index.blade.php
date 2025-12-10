@@ -16,8 +16,10 @@
                 <tr>
                     <th>Student Name</th>
                     <th>Enrollment Status</th>
-                    <th>Lectures</th>
-                    <th>Progress</th>
+                    <th>Video Lectures</th>
+                    <th>Video Progress</th>
+                    <!-- <th>Assignments</th>
+                    <th>Assignment Progress</th> -->
                     <th>Action</th>
                 </tr>
             </thead>
