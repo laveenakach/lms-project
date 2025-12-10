@@ -12,6 +12,7 @@ use App\Models\Invoice;
 use App\Models\Certification;
 use App\Models\Notification;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -36,8 +37,12 @@ class DashboardController extends Controller
     {
         $userId = Auth::id();
 
+        $courseIds = \DB::table('course_enrollments')
+        ->where('student_id', $userId)
+        ->pluck('course_id');
+
         $attendanceCount = Attendance::where('user_id', $userId)->count();
-        $assignmentCount = Assignment::where('student_id', $userId)->count();
+        $assignmentCount = Assignment::whereIn('course_id', $courseIds)->count();
         $projectCount = Project::where('student_id', $userId)->count();
         $courseCount = Course::where('student_id', $userId)->count();
         $certificationCount = Certification::where('student_id', $userId)->count();

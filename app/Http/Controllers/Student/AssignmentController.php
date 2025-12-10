@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Assignment;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
+use App\Models\Course;
 use Illuminate\Support\Facades\Auth;
 
 class AssignmentController extends Controller
@@ -24,9 +26,15 @@ class AssignmentController extends Controller
                 ->latest()
                 ->get();
         } elseif (Auth::user()->role === 'student') {
-            // Student sees only their records
-            $assignments = Assignment::with(['student', 'trainer'])
+
+            // Get all course IDs student is enrolled in
+            $enrolledCourseIds = \DB::table('course_enrollments')
                 ->where('student_id', Auth::id())
+                ->pluck('course_id');
+
+            // Show assignments for those courses
+            $assignments = Assignment::with(['course', 'trainer'])
+                ->whereIn('course_id', $enrolledCourseIds)
                 ->latest()
                 ->get();
         }
@@ -36,9 +44,17 @@ class AssignmentController extends Controller
 
     public function create($id = null)
     {
+        if (Auth::user()->role !== 'trainer') {
+            abort(403, 'Unauthorized Access');
+        }
+
+        // If editing, fetch assignment. If creating, make a new one.
         $assignment = $id ? Assignment::findOrFail($id) : new Assignment();
-        $users = User::where('role', ['student'])->latest()->get();
-        return view('student.assignments.create', compact('assignment', 'users'));
+
+        // Trainer should only see THEIR courses
+        $courses = Course::where('trainer_id', Auth::id())->get();
+
+        return view('student.assignments.create', compact('assignment', 'courses'));
     }
 
     public function store(Request $request, $id = null)
@@ -56,7 +72,7 @@ class AssignmentController extends Controller
 
         $data = $request->only(['title', 'description', 'submission_date','status','feedback']);
 
-        $data['student_id'] = $request->student_id;
+        $data['course_id'] = $request->course_id;
         $data['trainer_id'] = $request->trainer_id;
 
         // Handle photo upload
