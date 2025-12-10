@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Trainer;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Course;
+use App\Models\User;
+use App\Models\Assignment;
 use App\Models\VideoCompletion;
 
 class TrainerCourseController extends Controller
@@ -47,7 +49,7 @@ class TrainerCourseController extends Controller
     }
 
     // View a single course
-    public function courseView($id)
+    public function courseView($id,$studentId)
     {
         $course = Course::with([
             'enrollments.student',
@@ -55,6 +57,48 @@ class TrainerCourseController extends Controller
             'invoices'
         ])->where('trainer_id', auth()->id())->findOrFail($id);
 
-        return view('trainer.courses.view', compact('course'));
+        $student = User::findOrFail($studentId);
+
+        $courseVideoIds = $course->videos->pluck('id')->toArray();
+
+        $completedVideos = VideoCompletion::where('student_id', $studentId)
+            ->whereIn('video_id', $courseVideoIds)
+            ->pluck('video_id')
+            ->toArray();
+
+        $totalVideos = count($courseVideoIds);
+        $completedCount = count($completedVideos);
+
+        $videoProgress = ($totalVideos > 0)
+            ? round(($completedCount / $totalVideos) * 100)
+            : 0;
+
+        // Assignments
+        // $assignments = Assignment::where('course_id', $courseId)->get();
+
+        // $completedAssignments = AssignmentSubmission::where('student_id', $studentId)
+        //                         ->pluck('assignment_id')
+        //                         ->toArray();
+
+        // $totalAssignments = $assignments->count();
+        // $completedAssignmentsCount = count($completedAssignments);
+
+        // $assignmentProgress = ($totalAssignments > 0)
+        //     ? round(($completedAssignmentsCount / $totalAssignments) * 100)
+        //     : 0;
+
+        $assignments = Assignment::where('trainer_id', auth()->id())
+        ->where('student_id', $studentId)
+        ->get();
+
+            return view('trainer.courses.view', [
+            'course' => $course,
+            'student' => $student,
+            'completedVideos' => $completedVideos,
+            'videoProgress' => $videoProgress,
+             'assignments' => $assignments,
+            // 'completedAssignments' => $completedAssignments,
+            // 'assignmentProgress' => $assignmentProgress
+        ]);
     }
 }

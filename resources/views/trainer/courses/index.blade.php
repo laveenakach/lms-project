@@ -18,7 +18,6 @@
                     <th>Enrollment Status</th>
                     <th>Lectures</th>
                     <th>Progress</th>
-                    <th>Payment Status</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -48,20 +47,11 @@
                         {{ $progress }}%
 
                     </td>
-                    @php
-                        $invoice = $course->invoices
-                            ->where('user_id', $enroll->student_id)
-                            ->first();
-                    @endphp
                     <td>
-                        @if($invoice && $invoice->status == 'paid')
-                            <span class="text-success fw-bold">Paid</span>
-                        @else
-                            <span class="text-danger fw-bold">Unpaid</span>
-                        @endif
-                    </td>
-                    <td>
-                        <a href="{{ route('trainer.course.view', $course->id) }}" class="btn btn-sm btn-primary">View</a>
+                        <a href="{{ route('trainer.course.view', ['id' => $course->id, 'studentId' => $enroll->student_id]) }}" 
+                            class="btn btn-sm btn-primary">
+                        View
+                        </a>
                     </td>
                 </tr>
                 @endforeach

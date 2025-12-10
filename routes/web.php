@@ -174,7 +174,7 @@ Route::middleware(['auth', 'role:admin'])
 
 Route::middleware(['auth', 'role:trainer'])->group(function() {
     Route::get('/trainer/courses', [TrainerCourseController::class, 'courses'])->name('trainer.courses');
-    Route::get('/trainer/course/{id}', [TrainerCourseController::class, 'courseView'])->name('trainer.course.view');
+    Route::get('/trainer/course/{id}/student/{studentId}', [TrainerCourseController::class, 'courseView'])->name('trainer.course.view');
 });
 
 Route::post('/student/video/complete/{video}', [CourseController::class, 'markVideoComplete'])
