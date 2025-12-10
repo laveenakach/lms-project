@@ -1,0 +1,67 @@
+<?php
+
+namespace App\Notifications;
+
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
+
+class AssignmentDeadlineNotification extends Notification
+{
+    use Queueable;
+
+    public $assignment;
+
+    /**
+     * Create a new notification instance.
+     */
+    public function __construct($assignment)
+    {
+        $this->assignment = $assignment;
+    }
+
+    /**
+     * Get the notification's delivery channels.
+     *
+     * @return array<int, string>
+     */
+    public function via(object $notifiable): array
+    {
+        return ['mail','database'];
+    }
+
+    public function toDatabase($notifiable)
+    {
+        return [
+            'title' => 'Assignment Deadline',  // now included
+            'message' => "Assignment '{$this->assignment->title}' is due today!",
+            'assignment_id' => $this->assignment->id,
+            'date' => now()->toDateString(),
+            'target_role' => 'student'
+        ];
+    }
+
+    /**
+     * Get the mail representation of the notification.
+     */
+    public function toMail(object $notifiable): MailMessage
+    {
+        return (new MailMessage)
+            ->subject('Assignment Deadline Reminder')
+            ->line("Your assignment '{$this->assignment->title}' is due today!")
+            ->action('View Assignment', url('/assignments/'.$this->assignment->id))
+            ->line('Please submit on time.');
+    }
+
+    /**
+     * Get the array representation of the notification.
+     *
+     * @return array<string, mixed>
+     */
+    public function toArray($notifiable)
+    {
+        return $this->toDatabase($notifiable);
+    }
+
+}
