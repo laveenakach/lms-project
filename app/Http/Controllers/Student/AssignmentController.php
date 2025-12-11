@@ -106,4 +106,31 @@ class AssignmentController extends Controller
 
         return redirect()->back()->with('success', 'Assignment deleted successfully.');
     }
+
+    public function viewFile($id)
+    {
+        $assignment = Assignment::findOrFail($id);
+
+        $isPaid = true;
+
+        if (auth()->user()->role === 'student') {
+            $isPaid = DB::table('course_enrollments')
+                        ->where('student_id', auth()->id())
+                        ->where('course_id', $assignment->course_id)
+                        ->where('status', 'Approved')
+                        ->exists();
+
+            if (!$isPaid) {
+                abort(403, "You must complete payment to access this assignment.");
+            }
+        }
+
+        $filePath = public_path('uploads/assignments/'.$assignment->file_path);
+
+        if (!file_exists($filePath)) {
+            abort(404, "File not found.");
+        }
+
+        return response()->file($filePath);
+    }
 }

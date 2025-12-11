@@ -114,7 +114,9 @@ Route::middleware(['auth'])->group(function () {
             Route::get('assignments/create/{id?}', [AssignmentController::class, 'create'])->name('assignments.create');
             Route::post('assignments/store/{id?}', [AssignmentController::class, 'store'])->name('assignments.store');
             Route::delete('assignments/{id}', [AssignmentController::class, 'destroy'])->name('assignments.destroy');
-
+            Route::get('assignments/{id}/file', [AssignmentController::class, 'viewFile'])
+            ->name('assignments.viewfile');
+         
             Route::get('projects', [ProjectController::class, 'index'])->name('projects.index');
             Route::get('projects_create/{id?}', [ProjectController::class, 'create'])->name('projects.create');
             Route::post('projects/store/{id?}', [ProjectController::class, 'store'])->name('projects.store');
@@ -184,4 +186,3 @@ Route::middleware(['auth', 'check.course.paid'])
     ->group(function () {
         Route::get('courses/{id}/view', [CourseController::class, 'show'])->name('courses.show');
 });
-

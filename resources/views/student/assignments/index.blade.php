@@ -44,10 +44,39 @@
                        ? \Carbon\Carbon::parse($assignment->submission_date)->format('d M Y') : '—' }}
                     </td>
                     <td>
+                        @php
+                            $isPaid = true;
+
+                            if(auth()->user()->role === 'student') {
+                                $isPaid = DB::table('course_enrollments')
+                                            ->where('student_id', auth()->id())
+                                            ->where('course_id', $assignment->course_id)
+                                            ->where('status', 'Approved')
+                                            ->exists();
+                            }
+                        @endphp
+
                         @if($assignment->file_path)
-                        <a href="{{ asset('uploads/assignments/'.$assignment->file_path) }}" target="_blank">View File</a>
+                            @if(auth()->user()->role === 'student')
+                                @if($isPaid)
+                                    <a href="{{ route('student.assignments.viewfile', $assignment->id) }}"
+                                    class="btn btn-success btn-sm" 
+                                target="_blank">
+
+                                        View Assignment
+                                    </a>
+                                @else
+                                    <span class="text-danger">Payment required</span>
+                                @endif
+                            @else
+                                <!-- Admin & Trainer always can view -->
+                            <a href="{{ route('student.assignments.viewfile', $assignment->id) }}" 
+                                class="btn btn-success btn-sm" target="_blank">
+                                    View Assignment
+                                </a>
+                            @endif
                         @else
-                        —
+                            —
                         @endif
                     </td>
                     <td>{{ $assignment->status }}</td>
