@@ -180,3 +180,8 @@ Route::middleware(['auth', 'role:trainer'])->group(function() {
 Route::post('/student/video/complete/{video}', [CourseController::class, 'markVideoComplete'])
     ->name('video.complete');
 
+Route::middleware(['auth', 'check.course.paid'])
+    ->group(function () {
+        Route::get('courses/{id}/view', [CourseController::class, 'show'])->name('courses.show');
+});
+

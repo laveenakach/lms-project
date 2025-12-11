@@ -87,8 +87,8 @@ class TrainerCourseController extends Controller
         //     ? round(($completedAssignmentsCount / $totalAssignments) * 100)
         //     : 0;
 
-        $assignments = Assignment::where('trainer_id', auth()->id())
-        ->where('student_id', $studentId)
+        $assignments = Assignment::where('course_id', $course->id)
+        ->where('trainer_id', auth()->id()) // optional: filter by trainer
         ->get();
 
             return view('trainer.courses.view', [
