@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Course;
 use App\Models\AssignmentSubmission;
 use Illuminate\Support\Facades\Auth;
+use App\Notifications\AssignmentSubmittedNotification;
 
 class AssignmentController extends Controller
 {
@@ -167,6 +168,49 @@ class AssignmentController extends Controller
             Assignment::where('id', $assignmentId)
                 ->update(['status' => 'Submitted']);
         });
+
+        // -------------------------------
+        // Notify the trainer
+        // -------------------------------
+        $assignment = Assignment::find($assignmentId);
+        $student = auth()->user();
+        $message = "Student '".auth()->user()->name."' submitted '{$assignment->title}'";
+        $trainer = User::where('id', $assignment->trainer_id)
+            ->where('role', 'trainer')
+            ->first();
+
+        if ($trainer) {
+
+            $trainer->notify(new AssignmentSubmittedNotification($assignment, $student));
+            // Check if notification already exists to prevent duplicates
+            $duplicate = DB::table('user_notifications')
+                ->join('notifications', 'notifications.id', '=', 'user_notifications.notification_id')
+                ->where('user_notifications.user_id', $trainer->id)
+                ->where('notifications.message', $message)
+                ->exists();
+
+            if (!$duplicate) {
+                // Insert notification
+                $notificationId = DB::table('notifications')->insertGetId([
+                    'title' => 'New Assignment Submission',
+                    'message' => $message,
+                    'target_role' => 'trainer',
+                    'is_read' => 0,
+                    'created_by' => auth()->id(),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                // Attach to trainer
+                DB::table('user_notifications')->insert([
+                    'user_id' => $trainer->id,
+                    'notification_id' => $notificationId,
+                    'is_read' => 0,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+        }
 
         return back()->with('success', 'Assignment submitted successfully');
     }
