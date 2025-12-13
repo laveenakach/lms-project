@@ -62,7 +62,6 @@ Route::get('/blogs/{slug}', [FrontendController::class, 'blogshow'])->name('blog
 Route::get('/trainer_program', [FrontendController::class, 'trainer_program'])
     ->name('frontend.trainer_program');
 
-
 Route::get('/contact', function () {
     return view('frontend.contact');
 })->name('contact');
@@ -70,8 +69,6 @@ Route::get('/contact', function () {
 Route::post('/contact', [ContactController::class, 'submit'])->name('contact.submit');
 
 Route::post('/chatbot/reply', [ChatbotController::class, 'reply']);
-
-
 
 Route::middleware(['auth'])->group(function () {
 
@@ -105,7 +102,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/notifications/read/{id}', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::get('notifications', [NotificationController::class, 'index'])->name('notifications.index');
 
-
     Route::middleware(['auth', 'role:student,trainer'])
         ->prefix('student')
         ->name('student.')
@@ -125,7 +121,6 @@ Route::middleware(['auth'])->group(function () {
             ->name('projects.viewfile');
         });
 
-
     // trainer Routes
     Route::middleware('trainer')->prefix('trainer')->name('trainer.')->group(function () {
         Route::get('dashboard', [DashboardController::class, 'trainerdashboard'])->name('dashboard');
@@ -137,13 +132,9 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('certifications', CertificationController::class);
 });
 
-
-
-
 // Route::get('/dashboard', function () {
 //     return view('dashboard'); 
 // })->middleware(['auth', 'verified'])->name('dashboard');
-
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -166,7 +157,6 @@ Route::middleware(['auth', 'role:student,admin'])
             Route::get('invoice/pay/{id}', [PaymentController::class, 'createOrder'])->name('payment.checkout');
             Route::post('payment/verify', [PaymentController::class, 'verify'])->name('payment.verify');
         });
-
 });
 
 Route::middleware(['auth', 'role:admin'])
@@ -188,3 +178,17 @@ Route::middleware(['auth', 'check.course.paid'])
     ->group(function () {
         Route::get('courses/{id}/view', [CourseController::class, 'show'])->name('courses.show');
 });
+
+Route::middleware(['auth', 'role:student'])
+->name('student.')
+->group(function () {
+    Route::post('/student/assignments/{assignment}/upload',
+            [AssignmentController::class, 'uploadAssignment'])
+            ->name('assignment.upload');
+});
+
+Route::get('/assignment/submission/{submission}',[AssignmentController::class, 'viewSubmission'])->name('assignment.submission.view');
+
+
+
+

@@ -8,6 +8,7 @@ use App\Models\Assignment;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use App\Models\Course;
+use App\Models\AssignmentSubmission;
 use Illuminate\Support\Facades\Auth;
 
 class AssignmentController extends Controller
@@ -20,11 +21,16 @@ class AssignmentController extends Controller
                 ->latest()
                 ->get();
         } elseif (Auth::user()->role === 'trainer') {
-            // Trainer sees only their records
-            $assignments = Assignment::with(['student', 'trainer'])
-                ->where('trainer_id', Auth::id())
-                ->latest()
-                ->get();
+            
+            $assignments = Assignment::with([
+                'trainer',
+                'course.enrollments.student', // 🔥 REQUIRED
+                'submissions'                  // 🔥 REQUIRED
+            ])
+            ->where('trainer_id', Auth::id())
+            ->latest()
+            ->get();
+
         } elseif (Auth::user()->role === 'student') {
 
             // Get all course IDs student is enrolled in
@@ -133,4 +139,58 @@ class AssignmentController extends Controller
 
         return response()->file($filePath);
     }
+
+    public function uploadAssignment(Request $request, $assignmentId)
+    {
+        $request->validate([
+            'file' => 'required|file|mimes:pdf,doc,docx,zip|max:10240',
+        ]);
+
+        DB::transaction(function () use ($request, $assignmentId) {
+
+            $file = $request->file('file');
+            $filename = time().'_'.$file->getClientOriginalName();
+            $file->move(public_path('uploads/assignment_submissions'), $filename);
+
+            // Save submission
+            AssignmentSubmission::updateOrCreate(
+                [
+                    'assignment_id' => $assignmentId,
+                    'student_id' => auth()->id(),
+                ],
+                [
+                    'file_path' => $filename,
+                ]
+            );
+
+            // 🔥 Update assignment status
+            Assignment::where('id', $assignmentId)
+                ->update(['status' => 'Submitted']);
+        });
+
+        return back()->with('success', 'Assignment submitted successfully');
+    }
+
+    public function viewSubmission($submissionId)
+    {
+        $user = auth()->user();
+
+        $query = AssignmentSubmission::where('id', $submissionId);
+
+        // Student can view ONLY own submission
+        if ($user->role === 'student') {
+            $query->where('student_id', $user->id);
+        }
+
+        $submission = $query->firstOrFail();
+
+        $filePath = public_path('uploads/assignment_submissions/' . $submission->file_path);
+
+        if (!file_exists($filePath)) {
+            abort(404, 'File not found');
+        }
+
+        return response()->file($filePath);
+    }
+
 }
