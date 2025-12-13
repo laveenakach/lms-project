@@ -24,18 +24,16 @@
             <div class="row g-3">
                 <!-- Select Student -->
                 <div class="col-md-12">
-                    <label class="form-label fw-semibold">Select Student</label>
+                    <label class="form-label fw-semibold">Select Course</label>
                     @if(Auth::user()->role === 'student')
-                    {{-- Show student name (read-only) --}}
+                   
                     <input type="text"
                         class="form-control"
-                        value="{{ Auth::user()->name }}"
+                        value="{{ $project->course->title ?? 'Course' }}"
                         readonly>
 
-                    {{-- Hidden field to store student_id --}}
-                    <input type="hidden"
-                        name="student_id"
-                        value="{{ Auth::id() }}">
+                    <input type="hidden" name="course_id"
+                        value="{{ $project->course_id }}">
 
                         <input type="hidden"
                         name="trainer_id"
@@ -47,12 +45,12 @@
                         
                     @else
                     {{-- Trainer view: dropdown list --}}
-                    <select name="student_id" class="form-select" required>
-                        <option value="">-- Select Student --</option>
-                        @foreach($users as $user)
-                        <option value="{{ $user->id }}"
-                            {{ (isset($project) && $project->student_id == $user->id) ? 'selected' : '' }}>
-                            {{ $user->name }}
+                    <select name="course_id" class="form-select" required>
+                        <option value="">-- Select Course --</option>
+                        @foreach($courses as $course)
+                        <option value="{{ $course->id }}"
+                            {{ (isset($assignment) && $assignment->course_id == $course->id) ? 'selected' : '' }}>
+                            {{ $course->title }}
                         </option>
                         @endforeach
                     </select>

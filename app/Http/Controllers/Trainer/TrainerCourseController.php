@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Course;
 use App\Models\User;
 use App\Models\Assignment;
+use App\Models\Project;
 use App\Models\VideoCompletion;
 
 class TrainerCourseController extends Controller
@@ -19,13 +20,20 @@ class TrainerCourseController extends Controller
         $courses = Course::with([
             'enrollments.student', // fetch enrolled students
             'videos',              // fetch lectures/videos
-            'invoices'              // fetch invoice/payment info
+            'assignments',
+            'projects'
         ])->where('trainer_id', $trainerId)->get();
 
         foreach ($courses as $course) {
 
             $courseVideoIds = $course->videos->pluck('id')->toArray();
             $totalVideos = count($courseVideoIds);
+
+            $assignmentIds = $course->assignments->pluck('id')->toArray();
+            $totalAssignment = count($assignmentIds);
+
+            $projectIds = $course->projects->pluck('id')->toArray();
+            $totalProject = count($projectIds);
 
             foreach ($course->enrollments as $enroll) {
 
@@ -54,7 +62,6 @@ class TrainerCourseController extends Controller
         $course = Course::with([
             'enrollments.student',
             'videos',
-            'invoices'
         ])->where('trainer_id', auth()->id())->findOrFail($id);
 
         $student = User::findOrFail($studentId);
@@ -91,12 +98,17 @@ class TrainerCourseController extends Controller
         ->where('trainer_id', auth()->id()) // optional: filter by trainer
         ->get();
 
+        $projects = Project::where('course_id', $course->id)
+        ->where('trainer_id', auth()->id()) // optional: filter by trainer
+        ->get();
+
             return view('trainer.courses.view', [
             'course' => $course,
             'student' => $student,
             'completedVideos' => $completedVideos,
             'videoProgress' => $videoProgress,
-             'assignments' => $assignments,
+            'assignments' => $assignments,
+            'projects' => $projects,
             // 'completedAssignments' => $completedAssignments,
             // 'assignmentProgress' => $assignmentProgress
         ]);

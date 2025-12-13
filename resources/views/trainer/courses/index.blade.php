@@ -18,8 +18,9 @@
                     <th>Enrollment Status</th>
                     <th>Video Lectures</th>
                     <th>Video Progress</th>
-                    <!-- <th>Assignments</th>
-                    <th>Assignment Progress</th> -->
+                    <th>Assignments</th>
+                    <th>Projects</th>
+                    <!-- <th>Assignment Progress</th> -->
                     <th>Action</th>
                 </tr>
             </thead>
@@ -49,6 +50,8 @@
                         {{ $progress }}%
 
                     </td>
+                    <td>{{ $course->assignments->count() }}</td>
+                    <td>{{ $course->projects->count() }}</td>
                     <td>
                         <a href="{{ route('trainer.course.view', ['id' => $course->id, 'studentId' => $enroll->student_id]) }}" 
                             class="btn btn-sm btn-primary">

@@ -121,6 +121,8 @@ Route::middleware(['auth'])->group(function () {
             Route::get('projects_create/{id?}', [ProjectController::class, 'create'])->name('projects.create');
             Route::post('projects/store/{id?}', [ProjectController::class, 'store'])->name('projects.store');
             Route::delete('projects/{id}', [ProjectController::class, 'destroy'])->name('projects.destroy');
+            Route::get('projects/{id}/file', [ProjectController::class, 'viewFile'])
+            ->name('projects.viewfile');
         });
 
 

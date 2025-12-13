@@ -43,7 +43,7 @@ class DashboardController extends Controller
 
         $attendanceCount = Attendance::where('user_id', $userId)->count();
         $assignmentCount = Assignment::whereIn('course_id', $courseIds)->count();
-        $projectCount = Project::where('student_id', $userId)->count();
+        $projectCount = Project::whereIn('course_id', $courseIds)->count();
         $courseCount = Course::where('student_id', $userId)->count();
         $certificationCount = Certification::where('student_id', $userId)->count();
     

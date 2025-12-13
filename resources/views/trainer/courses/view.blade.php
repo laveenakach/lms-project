@@ -165,5 +165,37 @@
                 <p class="text-muted">No assignments assigned yet.</p>
             @endif
 
+            <!-- Projects -->
+             <h5 class="fw-bold text-primary mb-3 mt-4">
+                <i class="bi bi-file-earmark-text me-2"></i> Projects
+            </h5>
+
+            @if($projects->count() > 0)
+                <ul class="list-group">
+                    @foreach($projects as $project)
+                        <li class="list-group-item d-flex justify-content-between">
+                            <span>
+                                <strong>{{ $project->title }}</strong><br>
+                                <small class="text-muted">{{ $project->description }}</small>
+                            </span>
+
+                            <span class="badge bg-info">{{ ucfirst($project->status) }}</span>
+
+                            @if($project->file_path)
+                                <a href="{{ asset('uploads/Projects/' . $project->file_path) }}" 
+                                class="btn btn-sm btn-primary mt-2" 
+                                target="_blank">
+                                    <i class="bi bi-file-earmark-arrow-down"></i> View File
+                                </a>
+                            @else
+                                <span class="text-muted d-block mt-2">No File Uploaded</span>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+            @else
+                <p class="text-muted">No assignments assigned yet.</p>
+            @endif
+
         </div>
 @endsection

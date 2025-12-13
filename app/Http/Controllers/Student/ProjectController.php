@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Student;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Project;
+use Illuminate\Support\Facades\DB;
 use App\Models\User;
+use App\Models\Course;
 use Illuminate\Support\Facades\Auth;
 
 class ProjectController extends Controller
@@ -25,8 +27,18 @@ class ProjectController extends Controller
                 ->get();
         } elseif (Auth::user()->role === 'student') {
             // Student sees only their records
-            $projects = Project::with(['student', 'trainer'])
+            // $projects = Project::with(['student', 'trainer'])
+            //     ->where('student_id', Auth::id())
+            //     ->latest()
+            //     ->get();
+            // Get all course IDs student is enrolled in
+            $enrolledCourseIds = \DB::table('course_enrollments')
                 ->where('student_id', Auth::id())
+                ->pluck('course_id');
+
+            // Show assignments for those courses
+            $projects = Project::with(['course', 'trainer'])
+                ->whereIn('course_id', $enrolledCourseIds)
                 ->latest()
                 ->get();
         }
@@ -36,9 +48,17 @@ class ProjectController extends Controller
 
     public function create($id = null)
     {
+        if (Auth::user()->role !== 'trainer') {
+            abort(403, 'Unauthorized Access');
+        }
+
+        // If editing, fetch project. If creating, make a new one.
         $project = $id ? Project::findOrFail($id) : new Project();
-        $users = User::where('role', ['student'])->latest()->get();
-        return view('student.projects.create', compact('project', 'users'));
+
+        // Trainer should only see THEIR courses
+        $courses = Course::where('trainer_id', Auth::id())->get();
+
+        return view('student.projects.create', compact('project', 'courses'));
     }
 
     public function store(Request $request, $id = null)
@@ -53,7 +73,7 @@ class ProjectController extends Controller
 
         $data = $request->only(['title', 'description', 'submission_date','status','feedback']);
 
-        $data['student_id'] = $request->student_id;
+        $data['course_id'] = $request->course_id;
         $data['trainer_id'] = $request->trainer_id;
 
         // Handle photo upload
@@ -87,5 +107,32 @@ class ProjectController extends Controller
         $project->delete();
 
         return redirect()->back()->with('success', 'Project deleted successfully.');
+    }
+
+    public function viewFile($id)
+    {
+        $project = Project::findOrFail($id);
+
+        $isPaid = true;
+
+        if (auth()->user()->role === 'student') {
+            $isPaid = DB::table('course_enrollments')
+                        ->where('student_id', auth()->id())
+                        ->where('course_id', $project->course_id)
+                        ->where('status', 'Approved')
+                        ->exists();
+
+            if (!$isPaid) {
+                abort(403, "You must complete payment to access this project.");
+            }
+        }
+
+        $filePath = public_path('uploads/Projects/'.$project->file_path);
+
+        if (!file_exists($filePath)) {
+            abort(404, "File not found.");
+        }
+
+        return response()->file($filePath);
     }
 }
