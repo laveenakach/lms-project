@@ -17,10 +17,11 @@
                     <th>Student Name</th>
                     <th>Enrollment Status</th>
                     <th>Video Lectures</th>
-                    <th>Video Progress</th>
                     <th>Assignments</th>
                     <th>Projects</th>
-                    <!-- <th>Assignment Progress</th> -->
+                    <th>Video Progress</th>
+                    <th>Assignment Progress</th>
+                    <th>Overall Progress</th>
                     <th>Action</th>
                 </tr>
             </thead>
@@ -30,6 +31,8 @@
                     <td>{{ $enroll->student->name }}</td>
                     <td>{{ $enroll->status }}</td>
                     <td>{{ $course->videos->count() }}</td>
+                    <td>{{ $course->assignments->count() }}</td>
+                    <td>{{ $course->projects->count() }}</td>
                     <td>
                         @php
                             $studentId = $enroll->student_id;
@@ -47,11 +50,32 @@
                             $progress = $totalVideos > 0 ? round(($completedVideos / $totalVideos) * 100) : 0;
                         @endphp
 
-                        {{ $progress }}%
-
+                        <div class="progress mt-1">
+                            <div class="progress-bar bg-info"
+                                style="width: {{ $progress }}%">
+                                {{ $progress }}%
+                            </div>
+                        </div>
                     </td>
-                    <td>{{ $course->assignments->count() }}</td>
-                    <td>{{ $course->projects->count() }}</td>
+                    <td>
+                        <div class="progress mt-1">
+                            <div class="progress-bar bg-info"
+                                style="width: {{ $enroll->assignment_progress }}%">
+                                {{ $enroll->assignment_progress }}%
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <!-- <strong>{{ $enroll->overall_progress }}%</strong> -->
+                         <div class="progress mt-1">
+                            <div class="progress-bar
+                                {{ $enroll->overall_progress >= 80 ? 'bg-success' :
+                                ($enroll->overall_progress >= 40 ? 'bg-warning' : 'bg-danger') }}"
+                                style="width: {{ $enroll->overall_progress }}%">
+                                {{ $enroll->overall_progress }}%
+                            </div>
+                        </div>
+                    </td>
                     <td>
                         <a href="{{ route('trainer.course.view', ['id' => $course->id, 'studentId' => $enroll->student_id]) }}" 
                             class="btn btn-sm btn-primary">

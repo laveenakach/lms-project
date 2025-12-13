@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\Assignment;
 use App\Models\Project;
 use App\Models\VideoCompletion;
+use Illuminate\Support\Facades\DB;
 
 class TrainerCourseController extends Controller
 {
@@ -49,7 +50,24 @@ class TrainerCourseController extends Controller
                     ? round(($completedVideos / $totalVideos) * 100)
                     : 0;
 
+                $submittedAssignments = DB::table('assignment_submissions')
+                ->where('student_id', $studentId)
+                ->whereIn('assignment_id', $assignmentIds)
+                ->count();
+
+                $totalAssignments = count($assignmentIds);
+
+                $assignmentProgress = $totalAssignments > 0
+                    ? round(($submittedAssignments / $totalAssignments) * 100)
+                    : 0;
+
+                $overallProgress = round(
+                    ($progress + $assignmentProgress) / 2
+                );
+
                 $enroll->progress = $progress;
+                $enroll->assignment_progress = $assignmentProgress;
+                $enroll->overall_progress = $overallProgress;
             }
         }
 
